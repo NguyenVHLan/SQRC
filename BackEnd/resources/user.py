@@ -12,7 +12,7 @@ from passlib.hash import pbkdf2_sha256
 from models import UserModel
 from schemas import UserSchema
 from blocklist import BLOCKLIST
-from authlist import check_auth,remove_from_authlist
+from authlist import auths
 from flask_cors import CORS
 
 blp = Blueprint("Users", "users", description="Operations on users")
@@ -55,7 +55,7 @@ class UserLogout(MethodView):
         jti = get_jwt()["jti"]
         BLOCKLIST.add(jti)
         current_user = get_jwt_identity()
-        remove_from_authlist(current_user)
+        auths.remove(current_user)
         return {"message": "Successfully logged out"}, 200
 
 
@@ -65,7 +65,7 @@ class User(MethodView):
     @blp.response(200, UserSchema)
     def get(self, user_id):
         current_user = get_jwt_identity()
-        if not check_auth(current_user):
+        if current_user not in auths:
             abort(404, message="User not authenticate.")
         user = UserModel.find_by_id(user_id)
         if not user:

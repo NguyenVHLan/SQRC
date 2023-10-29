@@ -13,7 +13,7 @@ import numpy as np
 from func.aes import decrypt
 from func.zip import decompress_zlib_data, convert_to_keypoints, convert_to_descriptors
 from func.finger import compare_fingerprints
-from authlist import add_to_authlist
+from authlist import auths
 
 blp = Blueprint("Auth", "auth", description="Authenticate")
 CORS(blp)
@@ -59,8 +59,9 @@ def post():
         print("Success! ", match_score)
         access_token = create_access_token(identity=user_id, fresh=True)
         refresh_token = create_refresh_token(user_id)
-        add_to_authlist(user_id)
-        return {"match": True, "match_score": match_score, "access_token": access_token, "refresh_token": refresh_token}, 200
+        auths.append(user_id)
+        print(auths)
+        return {"id": user_id, "match_score": match_score, "access_token": access_token, "refresh_token": refresh_token}, 200
     else:
         return {"message": "Failed!"}, 401
 

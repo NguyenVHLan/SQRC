@@ -1,6 +1,7 @@
 Flask-JWT-Extended
 Flask-Smorest
 Flask-SQLAlchemy
+Flask-Cors
 passlib
 marshmallow
 python-dotenv
@@ -8,5 +9,4 @@ qrcode
 pycryptodome
 opencv-python
 pillow
-zlib
 Image
