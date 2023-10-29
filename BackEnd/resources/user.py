@@ -55,7 +55,9 @@ class UserLogout(MethodView):
         jti = get_jwt()["jti"]
         BLOCKLIST.add(jti)
         current_user = get_jwt_identity()
-        auths.remove(current_user)
+        for n in auths:
+            if n == current_user:
+                auths.remove(n)
         return {"message": "Successfully logged out"}, 200
 
 

@@ -56,12 +56,14 @@ def post():
     match_score = compare_fingerprints(uploaded_keypoints, uploaded_descriptors, stored_keypoints, stored_descriptors)
     # Hiển thị kết quả
     if match_score > 80.0:
-        print("Success! ", match_score)
         access_token = create_access_token(identity=user_id, fresh=True)
         refresh_token = create_refresh_token(user_id)
-        auths.append(user_id)
-        print(auths)
+        if user_id not in auths:
+            auths.append(user_id)
         return {"id": user_id, "match_score": match_score, "access_token": access_token, "refresh_token": refresh_token}, 200
     else:
         return {"message": "Failed!"}, 401
 
+@blp.route("/test")
+def test(id):
+    return {"message": id}, 200
