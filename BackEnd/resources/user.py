@@ -8,7 +8,7 @@ from flask_jwt_extended import (
     jwt_required,
 )
 from passlib.hash import pbkdf2_sha256
-
+import os
 from models import UserModel
 from schemas import UserSchema
 from blocklist import BLOCKLIST
@@ -31,7 +31,7 @@ class UserRegister(MethodView):
         )
         user.save_to_db()
 
-        return {"message": "User created successfully."}, 201
+        return {"message": "User created successfully.","user_id": user.id}, 201
 
 
 @blp.route("/login")
@@ -68,18 +68,29 @@ class User(MethodView):
     def get(self, user_id):
         current_user = get_jwt_identity()
         if current_user not in auths:
-            abort(404, message="User not authenticate.")
+            abort(401, message="User not authenticate.")
         user = UserModel.find_by_id(user_id)
         if not user:
             abort(404, message="User not found.")
         return user
+
 
     def delete(self, user_id):
         user = UserModel.find_by_id(user_id)
         if not user:
             abort(404, message="User not found.")
         user.delete_from_db()
-        return {"message": "User deleted."}, 200
+        folder_path = f"uploads/{user_id}"
+        file_path = f"uploads/{user_id}/qrcode_{user_id}.png"
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                os.rmdir(folder_path)
+                return {"message": "User deleted."}, 204
+            except Exception as e:
+                return {"message": f"Failed to delete SQRC and directory: {str(e)}"}, 500
+        else:
+            return {"message": "Directory not found"}, 404
 
 
 @blp.route("/refresh")
@@ -89,3 +100,15 @@ class TokenRefresh(MethodView):
         current_user = get_jwt_identity()
         new_token = create_access_token(identity=current_user, fresh=False)
         return {"access_token": new_token}, 200
+
+@blp.route("/user")
+class UserList(MethodView):
+    @jwt_required()
+    @blp.response(200, UserSchema(many=True))
+    def get(self):
+        current_user = get_jwt_identity()
+        if current_user not in auths:
+            abort(401, message="User not authenticate.")
+        if not get_jwt()["is_admin"]:
+            abort(401, message="Admin privilege required.")
+        return UserModel.query.all()

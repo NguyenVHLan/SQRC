@@ -3,6 +3,8 @@ from flask_smorest import Blueprint, abort
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
+    get_jwt_identity,
+    jwt_required,
 )
 from blocklist import BLOCKLIST
 from flask_cors import CORS
@@ -65,5 +67,13 @@ def post():
         return {"message": "Failed!"}, 401
 
 @blp.route("/test")
-def test(id):
-    return {"message": id}, 200
+def test():
+    return {"message": "Success!"}, 200
+
+@blp.route("/checkauth")
+@jwt_required()
+def check():
+    current_user = get_jwt_identity()
+    if current_user in auths:
+        return {"message": "User authenticated."}, 200
+    return {"message": "User not authenticate."}, 401
